@@ -47,6 +47,10 @@
         <button class="btn btn-like" (click)="like(s)">
           👍 Like {{ s.nbLikes }}
         </button>
+        
+        <button class="btn btn-like" [routerLink]="['/suggestions', s.id]">
+             Details
+        </button>
 
         <!-- si déjà favori => bouton retirer -->
         <button

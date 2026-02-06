@@ -1,1 +1,14 @@
-<p>header works!</p>
+<header class="header">
+  <div class="header-container">
+    <a routerLink="/home" class="brand">Suggestions App</a>
+    
+    <nav>
+      <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        🏠 Accueil
+      </a>
+      <a routerLink="/suggestions" routerLinkActive="active">
+        📋 Suggestions
+      </a>
+    </nav>
+  </div>
+</header>

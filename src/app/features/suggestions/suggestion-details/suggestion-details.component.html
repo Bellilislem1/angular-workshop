@@ -1,0 +1,102 @@
+<div class="details-page">
+  <div class="details-container">
+    <!-- En-tête -->
+    <div class="page-header">
+      <h1 class="page-title">Détails de la suggestion</h1>
+      <div class="breadcrumb">
+        <a routerLink="/home">Accueil</a>
+        <span>›</span>
+        <a routerLink="/suggestions">Suggestions</a>
+        <span>›</span>
+        <span>Détails</span>
+      </div>
+    </div>
+
+    <!-- Carte de détails -->
+    <div 
+      class="detail-card" 
+      *ngIf="suggestion; else notFound"
+      [ngClass]="{
+        'status-accepted': suggestion.status === 'acceptee',
+        'status-refused': suggestion.status === 'refusee',
+        'status-pending': suggestion.status === 'en_attente'
+      }"
+    >
+      <!-- Titre -->
+      <h2 class="suggestion-title">{{ suggestion.title }}</h2>
+
+      <!-- Meta -->
+      <div class="suggestion-meta">
+        <div class="meta-item">
+          <span class="category-badge">{{ suggestion.category }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-icon">📅</span>
+          <span class="date-badge">{{ suggestion.date | date:'dd MMMM yyyy' }}</span>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="suggestion-description">
+        <h3 class="description-title">Description</h3>
+        <p class="description-text">{{ suggestion.description }}</p>
+      </div>
+
+      <!-- Statut -->
+      <div class="suggestion-status">
+        <h3 class="status-title">📊 Statut actuel</h3>
+        <span 
+          class="status-badge"
+          [ngClass]="{
+            'accepted': suggestion.status === 'acceptee',
+            'pending': suggestion.status === 'en_attente',
+            'refused': suggestion.status === 'refusee'
+          }"
+        >
+          {{ suggestion.status === 'acceptee' ? '✅ Acceptée' : 
+             suggestion.status === 'refusee' ? '❌ Refusée' : 
+             '⏳ En attente' }}
+        </span>
+      </div>
+
+      <!-- Statistiques -->
+      <div class="suggestion-stats">
+        <div class="stat-card">
+          <div class="stat-value">{{ suggestion.nbLikes }}</div>
+          <div class="stat-label">👍 Likes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ suggestion.id }}</div>
+          <div class="stat-label">🔢 ID</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="detail-actions">
+        <a routerLink="/suggestions" class="btn btn-back">
+          ⬅️ Retour à la liste
+        </a>
+        <button class="btn btn-edit" *ngIf="suggestion.status !== 'refusee'">
+          ✏️ Modifier
+        </button>
+        <button class="btn btn-delete">
+          🗑️ Supprimer
+        </button>
+      </div>
+    </div>
+
+    <!-- Message si non trouvé -->
+    <ng-template #notFound>
+      <div class="not-found">
+        <div class="not-found-icon">🔍</div>
+        <h2 class="not-found-title">Suggestion introuvable</h2>
+        <p class="not-found-text">
+          Désolé, nous n'avons pas pu trouver la suggestion que vous recherchez.
+        </p>
+        <a routerLink="/suggestions" class="btn btn-back">
+          ⬅️ Retour à la liste
+        </a>
+      </div>
+    </ng-template>
+  </div>
+</div>
