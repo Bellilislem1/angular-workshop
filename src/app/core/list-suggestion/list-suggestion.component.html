@@ -1,5 +1,10 @@
 <div class="page">
-  <h2 class="page-title">Liste des suggestions</h2>
+  <div class="page-header">
+    <h2 class="page-title">Liste des suggestions</h2>
+    <button class="btn-add" routerLink="/suggestions/new">
+      ➕ Ajouter une suggestion
+    </button>
+  </div>
 
   <div class="search-wrapper">
     <input
@@ -19,12 +24,13 @@
 
   <div class="cards">
     <div class="card" *ngFor="let s of filteredSuggestions">
-      <h3 class="card-title">{{ s.title }}</h3>
-
-      <div class="meta">
-        <span class="category">{{ s.category }}</span>
-        <span class="dot">•</span>
-        <span class="date">{{ s.date | date:'dd MMM yyyy' }}</span>
+      <div class="card-header">
+        <h3 class="card-title">{{ s.title }}</h3>
+        <div class="meta">
+          <span class="category">{{ s.category }}</span>
+          <span class="dot">•</span>
+          <span class="date">{{ s.date | date:'dd MMM yyyy' }}</span>
+        </div>
       </div>
 
       <p class="desc">{{ s.description }}</p>
@@ -38,27 +44,27 @@
             'badge-refused': s.status === 'refusee'
           }"
         >
-          {{ s.status }}
+          {{ s.status === 'acceptee' ? 'ACCEPTÉE' : 
+             s.status === 'refusee' ? 'REFUSÉE' : 
+             'EN ATTENTE' }}
         </span>
       </div>
 
-      <!-- Boutons (pas de boutons si refusée) -->
       <div class="actions" *ngIf="s.status !== 'refusee'">
         <button class="btn btn-like" (click)="like(s)">
           👍 Like {{ s.nbLikes }}
         </button>
         
-        <button class="btn btn-like" [routerLink]="['/suggestions', s.id]">
-             Details
+        <button class="btn btn-details" [routerLink]="['/suggestions', s.id]">
+          📄 Details
         </button>
 
-        <!-- si déjà favori => bouton retirer -->
         <button
           *ngIf="isFavorite(s); else addFavBtn"
           class="btn btn-remove"
           (click)="removeFromFavorites(s)"
         >
-          ✖ Retirer des favoris
+          ✖ Retirer
         </button>
 
         <ng-template #addFavBtn>
@@ -70,40 +76,51 @@
     </div>
   </div>
 
-  <!-- FAVORIS -->
-<h2 class="favorites-title" *ngIf="favorites.length > 0">
-  Favoris
-</h2>
+  <!-- SECTION FAVORIS -->
+  <div *ngIf="favorites.length > 0">
+    <h2 class="favorites-title">⭐ Mes Favoris</h2>
 
-  <div class="cards" *ngIf="favorites.length > 0">
-    <div class="card" *ngFor="let f of favorites">
-      <h3 class="card-title">{{ f.title }}</h3>
+    <div class="cards">
+      <div class="card" *ngFor="let f of favorites">
+        <div class="card-header">
+          <h3 class="card-title">{{ f.title }}</h3>
+          <div class="meta">
+            <span class="category">{{ f.category }}</span>
+            <span class="dot">•</span>
+            <span class="date">{{ f.date | date:'dd MMM yyyy' }}</span>
+          </div>
+        </div>
 
-      <div class="meta">
-        <span class="category">{{ f.category }}</span>
-        <span class="dot">•</span>
-        <span class="date">{{ f.date | date:'dd MMM yyyy' }}</span>
-      </div>
+        <p class="desc">{{ f.description }}</p>
 
-      <p class="desc">{{ f.description }}</p>
+        <div class="status">
+          <span
+            class="badge"
+            [ngClass]="{
+              'badge-accepted': f.status === 'acceptee',
+              'badge-pending': f.status === 'en_attente',
+              'badge-refused': f.status === 'refusee'
+            }"
+          >
+            {{ f.status === 'acceptee' ? 'ACCEPTÉE' : 
+               f.status === 'refusee' ? 'REFUSÉE' : 
+               'EN ATTENTE' }}
+          </span>
+        </div>
 
-      <div class="status">
-        <span
-          class="badge"
-          [ngClass]="{
-            'badge-accepted': f.status === 'acceptee',
-            'badge-pending': f.status === 'en_attente',
-            'badge-refused': f.status === 'refusee'
-          }"
-        >
-          {{ f.status }}
-        </span>
-      </div>
+        <div class="actions">
+          <button class="btn btn-like" (click)="like(f)">
+            👍 Like {{ f.nbLikes }}
+          </button>
 
-      <div class="actions">
-        <button class="btn btn-remove" (click)="removeFromFavorites(f)">
-          ✖ Retirer des favoris
-        </button>
+          <button class="btn btn-details" [routerLink]="['/suggestions', f.id]">
+            📄 Details
+          </button>
+
+          <button class="btn btn-remove" (click)="removeFromFavorites(f)">
+            ✖ Retirer des favoris
+          </button>
+        </div>
       </div>
     </div>
   </div>

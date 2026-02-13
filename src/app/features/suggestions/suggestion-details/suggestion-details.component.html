@@ -53,9 +53,9 @@
             'refused': suggestion.status === 'refusee'
           }"
         >
-          {{ suggestion.status === 'acceptee' ? '✅ Acceptée' : 
-             suggestion.status === 'refusee' ? '❌ Refusée' : 
-             '⏳ En attente' }}
+          {{ suggestion.status === 'acceptee' ? '✅ ACCEPTÉE' : 
+             suggestion.status === 'refusee' ? '❌ REFUSÉE' : 
+             '⏳ EN ATTENTE' }}
         </span>
       </div>
 
@@ -76,12 +76,6 @@
         <a routerLink="/suggestions" class="btn btn-back">
           ⬅️ Retour à la liste
         </a>
-        <button class="btn btn-edit" *ngIf="suggestion.status !== 'refusee'">
-          ✏️ Modifier
-        </button>
-        <button class="btn btn-delete">
-          🗑️ Supprimer
-        </button>
       </div>
     </div>
 

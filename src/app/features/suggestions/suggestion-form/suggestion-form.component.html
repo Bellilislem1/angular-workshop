@@ -1,0 +1,113 @@
+<div class="form-page">
+  <div class="form-container">
+    <!-- En-tête -->
+    <div class="form-header">
+      <h1 class="form-title">Nouvelle suggestion</h1>
+      <p class="form-subtitle">Partagez votre idée pour améliorer notre organisation</p>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="form-card">
+      <form [formGroup]="suggestionForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Titre -->
+        <div class="form-group">
+          <label class="form-label">
+            Titre <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            class="form-input"
+            [class.invalid]="hasError('title', 'required') || hasError('title', 'minlength') || hasError('title', 'pattern')"
+            formControlName="title"
+            placeholder="Ex: Améliorer la cafétéria"
+          />
+          <div class="error-message" *ngIf="getErrorMessage('title')">
+            {{ getErrorMessage('title') }}
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label">
+            Description <span class="required">*</span>
+          </label>
+          <textarea 
+            class="form-textarea"
+            [class.invalid]="hasError('description', 'required') || hasError('description', 'minlength')"
+            formControlName="description"
+            placeholder="Décrivez votre suggestion en détail (minimum 30 caractères)..."
+          ></textarea>
+          <div class="char-counter" 
+               [class.warning]="suggestionForm.get('description')?.value?.length > 0 && suggestionForm.get('description')?.value?.length < 30"
+               [class.error]="hasError('description', 'minlength')">
+            {{ suggestionForm.get('description')?.value?.length || 0 }} / 30 caractères minimum
+          </div>
+          <div class="error-message" *ngIf="getErrorMessage('description')">
+            {{ getErrorMessage('description') }}
+          </div>
+        </div>
+
+        <!-- Catégorie -->
+        <div class="form-group">
+          <label class="form-label">
+            Catégorie <span class="required">*</span>
+          </label>
+          <select 
+            class="form-select"
+            [class.invalid]="hasError('category', 'required')"
+            formControlName="category"
+          >
+            <option value="">-- Sélectionnez une catégorie --</option>
+            <option *ngFor="let cat of categories" [value]="cat">
+              {{ cat }}
+            </option>
+          </select>
+          <div class="error-message" *ngIf="getErrorMessage('category')">
+            {{ getErrorMessage('category') }}
+          </div>
+        </div>
+
+        <!-- Date (readonly) -->
+        <div class="form-group">
+          <label class="form-label">Date :</label>
+          <input 
+            type="date" 
+            class="form-input"
+            formControlName="date"
+            readonly
+          />
+        </div>
+
+        <!-- Statut (readonly) -->
+        <div class="form-group">
+          <label class="form-label">Statut :</label>
+          <input 
+            type="text" 
+            class="form-input"
+            formControlName="status"
+            readonly
+          />
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-cancel"
+            routerLink="/suggestions"
+          >
+            ❌ Annuler
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-submit"
+            [disabled]="suggestionForm.invalid"
+          >
+            ✅ Soumettre
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
