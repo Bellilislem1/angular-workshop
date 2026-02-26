@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Suggestion } from '../../models/suggestion';
+import { SuggestionService } from '../../core/services/suggestion.service';
 
 @Component({
   selector: 'app-list-suggestion',
@@ -7,64 +8,36 @@ import { Suggestion } from '../../models/suggestion';
   styleUrls: ['./list-suggestion.component.css']
 })
 export class ListSuggestionComponent implements OnInit {
-
-  // Recherche (étape 8)
   searchTitle: string = '';
   searchCategory: string = '';
-
-  // Données (étape 5)
-  suggestions: Suggestion[] = [
-    {
-      id: 1,
-      title: 'Organiser une journée team building',
-      description: 'Suggestion pour organiser une journée de team building pour renforcer les liens entre les membres de l\'équipe.',
-      category: 'Événements',
-      date: new Date('2025-01-20'),
-      status: 'acceptee',
-      nbLikes: 10
-    },
-    {
-      id: 2,
-      title: 'Améliorer le système de réservation',
-      description: 'Proposition pour améliorer la gestion des réservations en ligne avec un système de confirmation automatique.',
-      category: 'Technologie',
-      date: new Date('2025-01-15'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 3,
-      title: 'Créer un système de récompenses',
-      description: 'Mise en place d\'un programme de récompenses pour motiver les employés et reconnaître leurs efforts.',
-      category: 'Ressources Humaines',
-      date: new Date('2025-01-25'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 4,
-      title: 'Moderniser l\'interface utilisateur',
-      description: 'Refonte complète de l\'interface utilisateur pour une meilleure expérience utilisateur.',
-      category: 'Technologie',
-      date: new Date('2025-01-30'),
-      status: 'en_attente',
-      nbLikes: 0
-    }
-  ];
-
+  suggestions: Suggestion[] = [];
   favorites: Suggestion[] = [];
 
-  // LocalStorage keys (simple + stable)
-  private readonly LS_SUGGESTIONS = 'campusideas_suggestions';
   private readonly LS_FAVORITES = 'campusideas_favorites';
 
+  constructor(private suggestionService: SuggestionService) {}
+
   ngOnInit(): void {
-    // Charger les likes + favoris sauvegardés
-    this.loadSuggestionsFromStorage();
+    this.loadSuggestions();
     this.loadFavoritesFromStorage();
   }
 
-  // ✅ Liste filtrée utilisée par ton HTML: *ngFor="let s of filteredSuggestions"
+  loadSuggestions(): void {
+    this.suggestionService.getSuggestionsList().subscribe({
+      next: (data) => {
+        this.suggestions = data.map(s => ({
+          ...s,
+          date: new Date(s.date as any) // ✅ convert string -> Date
+        })) as Suggestion[];
+
+        console.log('✅ Suggestions chargées:', this.suggestions);
+      },
+      error: (error) => {
+        console.error('❌ Erreur:', error);
+      }
+    });
+  }
+
   get filteredSuggestions(): Suggestion[] {
     const t = this.searchTitle.trim().toLowerCase();
     const c = this.searchCategory.trim().toLowerCase();
@@ -76,17 +49,44 @@ export class ListSuggestionComponent implements OnInit {
     });
   }
 
-  // Étape 7: Like (et sauvegarde)
-  like(s: Suggestion) {
+  like(s: Suggestion): void {
     s.nbLikes++;
-    this.saveSuggestionsToStorage();
+    
+    this.suggestionService.updateLikes(s.id, s.nbLikes).subscribe({
+      next: () => console.log('✅ Likes mis à jour'),
+      error: (error) => {
+        console.error('❌ Erreur:', error);
+        s.nbLikes--;
+      }
+    });
   }
 
-  // Étape 7: favoris (et sauvegarde)
-  addToFavorites(s: Suggestion) {
+  deleteSuggestion(s: Suggestion): void {
+    if (confirm(`Voulez-vous vraiment supprimer "${s.title}" ?`)) {
+      this.suggestionService.deleteSuggestion(s.id).subscribe({
+        next: () => {
+          // ✅ enlever de la liste sans recharger
+          this.suggestions = this.suggestions.filter(x => x.id !== s.id);
+
+          // ✅ enlever des favoris aussi
+          this.favorites = this.favorites.filter(f => f.id !== s.id);
+          this.saveFavoritesToStorage();
+
+          alert('✅ Suggestion supprimée');
+        },
+        error: (error) => {
+          console.error('❌ Erreur:', error);
+          alert('❌ Erreur lors de la suppression');
+        }
+      });
+    }
+  }
+
+  addToFavorites(s: Suggestion): void {
     if (!this.isFavorite(s)) {
       this.favorites.push(s);
       this.saveFavoritesToStorage();
+      alert(`"${s.title}" ajoutée aux favoris !`);
     }
   }
 
@@ -94,41 +94,12 @@ export class ListSuggestionComponent implements OnInit {
     return this.favorites.some(f => f.id === s.id);
   }
 
-  removeFromFavorites(s: Suggestion) {
+  removeFromFavorites(s: Suggestion): void {
     this.favorites = this.favorites.filter(f => f.id !== s.id);
     this.saveFavoritesToStorage();
   }
 
-  // ======================
-  // LocalStorage (persist)
-  // ======================
-
-  private saveSuggestionsToStorage() {
-    // Convert Date -> string (sinon JSON casse la date)
-    const data = this.suggestions.map(s => ({
-      ...s,
-      date: s.date instanceof Date ? s.date.toISOString() : s.date
-    }));
-    localStorage.setItem(this.LS_SUGGESTIONS, JSON.stringify(data));
-  }
-
-  private loadSuggestionsFromStorage() {
-    const raw = localStorage.getItem(this.LS_SUGGESTIONS);
-    if (!raw) return;
-
-    try {
-      const data = JSON.parse(raw) as any[];
-      // Remplacer les suggestions par la version sauvegardée (likes inclus)
-      this.suggestions = data.map(x => ({
-        ...x,
-        date: new Date(x.date)
-      })) as Suggestion[];
-    } catch {
-      // si storage corrompu -> ignorer
-    }
-  }
-
-  private saveFavoritesToStorage() {
+  private saveFavoritesToStorage(): void {
     const data = this.favorites.map(f => ({
       ...f,
       date: f.date instanceof Date ? f.date.toISOString() : f.date
@@ -136,7 +107,7 @@ export class ListSuggestionComponent implements OnInit {
     localStorage.setItem(this.LS_FAVORITES, JSON.stringify(data));
   }
 
-  private loadFavoritesFromStorage() {
+  private loadFavoritesFromStorage(): void {
     const raw = localStorage.getItem(this.LS_FAVORITES);
     if (!raw) return;
 
@@ -146,9 +117,6 @@ export class ListSuggestionComponent implements OnInit {
         ...x,
         date: new Date(x.date)
       })) as Suggestion[];
-    } catch {
-      // ignorer
-    }
+    } catch {}
   }
-
 }

@@ -2,8 +2,12 @@
   <div class="form-container">
     <!-- En-tête -->
     <div class="form-header">
-      <h1 class="form-title">Nouvelle suggestion</h1>
-      <p class="form-subtitle">Partagez votre idée pour améliorer notre organisation</p>
+    <h1 class="form-title">
+      {{ isEditMode ? 'Modifier la suggestion' : 'Nouvelle suggestion' }}
+    </h1>     
+      <p class="form-subtitle">
+        {{ isEditMode ? 'Modifiez les informations de votre suggestion' : 'Partagez votre idée pour améliorer notre organisation' }}
+      </p>
     </div>
 
     <!-- Formulaire -->

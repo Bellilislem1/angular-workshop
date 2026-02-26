@@ -77,6 +77,7 @@
   </div>
 
   <!-- SECTION FAVORIS -->
+ <!-- SECTION FAVORIS -->
   <div *ngIf="favorites.length > 0">
     <h2 class="favorites-title">⭐ Mes Favoris</h2>
 
@@ -102,13 +103,14 @@
               'badge-refused': f.status === 'refusee'
             }"
           >
-            {{ f.status === 'acceptee' ? 'ACCEPTÉE' : 
-               f.status === 'refusee' ? 'REFUSÉE' : 
-               'EN ATTENTE' }}
+            {{ f.status === 'acceptee' ? 'ACCEPTÉE' :
+              f.status === 'refusee' ? 'REFUSÉE' :
+              'EN ATTENTE' }}
           </span>
         </div>
 
-        <div class="actions">
+        <!-- ✅ ACTIONS FAVORI (avec f) -->
+        <div class="actions" *ngIf="f.status !== 'refusee'">
           <button class="btn btn-like" (click)="like(f)">
             👍 Like {{ f.nbLikes }}
           </button>
@@ -118,7 +120,11 @@
           </button>
 
           <button class="btn btn-remove" (click)="removeFromFavorites(f)">
-            ✖ Retirer des favoris
+            ✖ Retirer
+          </button>
+
+          <button class="btn btn-delete" (click)="deleteSuggestion(f)">
+            🗑️ Supprimer
           </button>
         </div>
       </div>

@@ -35,7 +35,15 @@
   align-items: center;
   gap: 8px;
 }
+.btn-delete {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+}
 
+.btn-delete:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
 .btn-details {
   background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
   color: #ffffff;

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { Suggestion } from '../../../models/suggestion';
+import { Router, ActivatedRoute } from '@angular/router';
+import { SuggestionService } from '../../../core/services/suggestion.service';
 
 @Component({
   selector: 'app-suggestion-form',
@@ -10,6 +10,8 @@ import { Suggestion } from '../../../models/suggestion';
 })
 export class SuggestionFormComponent implements OnInit {
   suggestionForm!: FormGroup;
+  isEditMode = false;
+  suggestionId?: number;
   
   categories: string[] = [
     'Infrastructure et bâtiments',
@@ -24,16 +26,22 @@ export class SuggestionFormComponent implements OnInit {
     'Autre'
   ];
 
-  // Même clé localStorage que dans list-suggestion
-  private readonly LS_SUGGESTIONS = 'campusideas_suggestions';
-
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private suggestionService: SuggestionService
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+    
+    this.suggestionId = Number(this.route.snapshot.paramMap.get('id'));
+    
+    if (this.suggestionId) {
+      this.isEditMode = true;
+      this.loadSuggestion(this.suggestionId);
+    }
   }
 
   initForm(): void {
@@ -43,7 +51,7 @@ export class SuggestionFormComponent implements OnInit {
       title: ['', [
         Validators.required,
         Validators.minLength(5),
-        Validators.pattern('^[A-Z][a-zA-Z ]*$')  // Permet les espaces
+        Validators.pattern('^[A-Z][a-zA-Z ]*$')
       ]],
       description: ['', [
         Validators.required,
@@ -51,7 +59,26 @@ export class SuggestionFormComponent implements OnInit {
       ]],
       category: ['', Validators.required],
       date: [{ value: today.toISOString().split('T')[0], disabled: true }],
-      status: [{ value: 'en_attente', disabled: true }]  // ✅ CHANGÉ : underscore au lieu d'espace
+      status: [{ value: 'en_attente', disabled: true }]
+    });
+  }
+
+  loadSuggestion(id: number): void {
+    this.suggestionService.getSuggestionById(id).subscribe({
+      next: (data) => {
+        this.suggestionForm.patchValue({
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          date: new Date(data.date).toISOString().split('T')[0],
+          status: data.status
+        });
+      },
+      error: (error) => {
+        console.error('❌ Erreur:', error);
+        alert('❌ Erreur lors du chargement');
+        this.router.navigate(['/suggestions']);
+      }
     });
   }
 
@@ -59,114 +86,48 @@ export class SuggestionFormComponent implements OnInit {
     if (this.suggestionForm.valid) {
       const formValue = this.suggestionForm.getRawValue();
       
-      // 1. Charger les suggestions existantes depuis localStorage
-      const existingSuggestions = this.loadSuggestionsFromStorage();
-      
-      // 2. Générer un nouvel ID (max ID + 1)
-      const newId = existingSuggestions.length > 0 
-        ? Math.max(...existingSuggestions.map(s => s.id)) + 1 
-        : 1;
-      
-      // 3. Créer la nouvelle suggestion avec statut normalisé
-      const newSuggestion: Suggestion = {
-        id: newId,
+      const suggestionData = {
         title: formValue.title,
         description: formValue.description,
         category: formValue.category,
         date: new Date(formValue.date),
-        status: 'en_attente',  // ✅ CHANGÉ : toujours en_attente pour cohérence
+        status: formValue.status,
         nbLikes: 0
       };
 
-      // 4. Ajouter la nouvelle suggestion à la liste
-      existingSuggestions.push(newSuggestion);
-      
-      // 5. Sauvegarder dans localStorage
-      this.saveSuggestionsToStorage(existingSuggestions);
-
-      // 6. Message de confirmation
-      alert(`✅ Suggestion "${formValue.title}" ajoutée avec succès !`);
-      
-      // 7. Redirection vers la liste
-      this.router.navigate(['/suggestions']);
-    }
-  }
-
-  // =============================
-  // Méthodes localStorage
-  // =============================
-
-  private loadSuggestionsFromStorage(): Suggestion[] {
-    const raw = localStorage.getItem(this.LS_SUGGESTIONS);
-    
-    if (!raw) {
-      // Si localStorage est vide, retourner les suggestions par défaut
-      return this.getDefaultSuggestions();
-    }
-
-    try {
-      const data = JSON.parse(raw) as any[];
-      return data.map(x => ({
-        ...x,
-        date: new Date(x.date)
-      })) as Suggestion[];
-    } catch {
-      return this.getDefaultSuggestions();
-    }
-  }
-
-  private saveSuggestionsToStorage(suggestions: Suggestion[]): void {
-    const data = suggestions.map(s => ({
-      ...s,
-      date: s.date instanceof Date ? s.date.toISOString() : s.date
-    }));
-    localStorage.setItem(this.LS_SUGGESTIONS, JSON.stringify(data));
-  }
-
-  private getDefaultSuggestions(): Suggestion[] {
-    return [
-      {
-        id: 1,
-        title: 'Organiser une journée team building',
-        description: 'Suggestion pour organiser une journée de team building pour renforcer les liens entre les membres de l\'équipe.',
-        category: 'Événements',
-        date: new Date('2025-01-20'),
-        status: 'acceptee',
-        nbLikes: 10
-      },
-      {
-        id: 2,
-        title: 'Améliorer le système de réservation',
-        description: 'Proposition pour améliorer la gestion des réservations en ligne avec un système de confirmation automatique.',
-        category: 'Technologie',
-        date: new Date('2025-01-15'),
-        status: 'refusee',
-        nbLikes: 0
-      },
-      {
-        id: 3,
-        title: 'Créer un système de récompenses',
-        description: 'Mise en place d\'un programme de récompenses pour motiver les employés et reconnaître leurs efforts.',
-        category: 'Ressources Humaines',
-        date: new Date('2025-01-25'),
-        status: 'refusee',
-        nbLikes: 0
-      },
-      {
-        id: 4,
-        title: 'Moderniser l\'interface utilisateur',
-        description: 'Refonte complète de l\'interface utilisateur pour une meilleure expérience utilisateur.',
-        category: 'Technologie',
-        date: new Date('2025-01-30'),
-        status: 'en_attente',
-        nbLikes: 0
+      if (this.isEditMode && this.suggestionId) {
+        this.updateSuggestion(this.suggestionId, suggestionData);
+      } else {
+        this.addSuggestion(suggestionData);
       }
-    ];
+    }
   }
 
-  // =============================
-  // Validation & Messages erreur
-  // =============================
+  addSuggestion(data: any): void {
+    this.suggestionService.addSuggestion(data).subscribe({
+      next: () => {
+        alert(`✅ Suggestion "${data.title}" ajoutée !`);
+        this.router.navigate(['/suggestions']);
+      },
+      error: (error) => {
+        console.error('❌ Erreur:', error);
+        alert('❌ Erreur lors de l\'ajout');
+      }
+    });
+  }
+
+  updateSuggestion(id: number, data: any): void {
+    this.suggestionService.updateSuggestion(id, data).subscribe({
+      next: () => {
+        alert(`✅ Suggestion "${data.title}" mise à jour !`);
+        this.router.navigate(['/suggestions']);
+      },
+      error: (error) => {
+        console.error('❌ Erreur:', error);
+        alert('❌ Erreur lors de la mise à jour');
+      }
+    });
+  }
 
   hasError(controlName: string, errorType: string): boolean {
     const control = this.suggestionForm.get(controlName);

@@ -76,6 +76,14 @@
         <a routerLink="/suggestions" class="btn btn-back">
           ⬅️ Retour à la liste
         </a>
+        
+        <button class="btn btn-edit" *ngIf="suggestion" [routerLink]="['/suggestions/edit', suggestion.id]">
+          ✏️ Modifier
+        </button>
+        
+        <button class="btn btn-delete" (click)="deleteSuggestion()">
+          🗑️ Supprimer
+        </button>
       </div>
     </div>
 
